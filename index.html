@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creativity and the Limits of Artificial Intelligence</title>
+    <style>
+        :root {
+            --bg-color: #F9F7F2;
+            --text-color: #1A1A1A;
+            --accent-color: #4A5568;
+            --content-width: 960px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Figtree', sans-serif;
+            line-height: 1.7;
+            padding: 0 40px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: var(--content-width); margin: 0 auto; }
+        header { margin-top: 140px; margin-bottom: 100px; }
+        h1 { font-size: 9rem; line-height: 0.8; margin-bottom: 40px; font-weight: 900; letter-spacing: -0.07em; color: #000; }
+        .meta { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-color); font-weight: 700; border-top: 2px solid #E5E1DA; display: inline-block; padding-top: 24px; }
+        article { padding-bottom: 150px; }
+        h2 { font-size: 2.8rem; margin: 100px 0 32px 0; font-weight: 800; letter-spacing: -0.04em; }
+        p { margin-bottom: 32px; font-size: 1.35rem; color: #2D3748; font-weight: 400; }
+
+        /* VIZ 1 & 2 CSS */
+        .viz-container, .segment-viz, .forces-viz, .limits-viz-container {
+            width: 100%; background: #F0EDE6; border: 1px solid #E5E1DA; margin: 60px 0;
+            display: flex; flex-direction: column; border-radius: 4px; position: relative; overflow: hidden;
+        }
+        .viz-container { height: 320px; }
+        .segment-viz { height: 400px; }
+        .viz-header { display: flex; height: 100%; width: 100%; }
+        .comp-side { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; position: relative; overflow: hidden; }
+        .comp-side:first-child { border-right: 1px dashed #A0AEC0; }
+        .label-sm { position: absolute; top: 28px; left: 0; right: 0; text-align: center; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #A0AEC0; }
+        .text-conveyor { display: flex; width: 200%; position: absolute; left: -100%; animation: textLoop 8s linear infinite; }
+        .token-set { display: flex; justify-content: space-around; width: 50%; }
+        .token { width: 16px; height: 16px; background: #000; flex-shrink: 0; }
+        @keyframes textLoop { from { transform: translateX(0); } to { transform: translateX(50%); } }
+        .audio-stack { width: 100%; display: flex; flex-direction: column; gap: 20px; }
+        .wave-layer { height: 30px; width: 100%; position: relative; overflow: hidden; }
+        .wave-svg { width: 200%; height: 100%; position: absolute; top: 0; left: -100%; }
+        .wave-path { fill: none; stroke: #000; stroke-width: 1.5; }
+        .animate-wave-slow { animation: waveLoop 20s linear infinite; }
+        .animate-wave-mid { animation: waveLoop 14s linear infinite; }
+        .animate-wave-fast { animation: waveLoop 9s linear infinite; }
+        @keyframes waveLoop { from { transform: translateX(0); } to { transform: translateX(50%); } }
+        .segment-stage { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; }
+        .status-indicator { position: absolute; top: 30px; left: 30px; color: var(--text-color); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.2em; }
+        .status-indicator::after { content: ""; animation: statusChange 12s infinite ease-in-out; }
+        @keyframes statusChange { 0%, 25% { content: "1. Continuous Human Perception "; } 30%, 60% { content: "2. AI Segmentation"; } 65%, 100% { content: "3. AI Reconstruction"; } }
+        .wave-human { fill: none; stroke: var(--text-color); stroke-width: 1.5; transition: opacity 1s ease; animation: humanFade 12s infinite; }
+        @keyframes humanFade { 0%, 60% { opacity: 1; stroke-width: 1.5; } 70%, 100% { opacity: 0.15; stroke-width: 1; } }
+        .wave-ai { fill: none; stroke: var(--text-color); stroke-width: 3.5; stroke-dasharray: 2500; stroke-dashoffset: 2500; animation: aiDraw 12s infinite ease-in-out; }
+        @keyframes aiDraw { 0%, 65% { stroke-dashoffset: 2500; opacity: 0; } 75%, 100% { stroke-dashoffset: 0; opacity: 1; } }
+        .chopper-grid { position: absolute; width: 100%; height: 50%; display: flex; justify-content: space-between; padding: 0 40px; }
+        .chop-bar { width: 1px; height: 100%; background: var(--text-color); opacity: 0; transform: scaleY(0); animation: chopAction 12s infinite ease-in-out; }
+        @keyframes chopAction { 0%, 25% { opacity: 0; transform: scaleY(0); } 30%, 55% { opacity: 0.3; transform: scaleY(1); } 60%, 100% { opacity: 0; transform: scaleY(0); } }
+
+        /* VIZ 3: LIMITS VIZ */
+        .limits-header { display: flex; height: 100%; width: 100%; }
+        .center-dot { fill: var(--text-color); }
+        .label-tiny { font-size: 11px; font-weight: 800; text-transform: uppercase; fill: var(--text-color); opacity: 0.4; }
+
+        /* AI side: clearly visible dashed wall that flares on impact */
+        .ai-perimeter {
+            fill: none; stroke: #000; stroke-width: 2; stroke-dasharray: 8 5; opacity: 0.45;
+            animation: aiBoundaryPulse 6s infinite;
+        }
+        @keyframes aiBoundaryPulse {
+            0%, 15%, 20%, 48%, 53%, 81%, 86%, 100% { stroke-width: 2; opacity: 0.45; }
+            17% { stroke-width: 4.5; opacity: 0.9; }
+            50% { stroke-width: 4.5; opacity: 0.9; }
+            83% { stroke-width: 4.5; opacity: 0.9; }
+        }
+        .ai-dot {
+            fill: var(--text-color);
+            animation: aiConstraint 6s infinite ease-in-out;
+        }
+        @keyframes aiConstraint {
+            0%, 100% { transform: translate(0px, 0px); }
+            17%      { transform: translate(118px, -30px); }
+            33%      { transform: translate(0px, 0px); }
+            50%      { transform: translate(-100px, 80px); }
+            66%      { transform: translate(0px, 0px); }
+            83%      { transform: translate(40px, -120px); }
+        }
+
+        /* Human side: always-visible boundary, dot passes through in same directions as AI */
+        .human-perimeter {
+            fill: none; stroke: #000; stroke-width: 2; stroke-dasharray: 8 5; opacity: 0.45;
+        }
+        .human-dot {
+            fill: #000;
+            animation: humanBreakout 6s infinite ease-in-out;
+        }
+        @keyframes humanBreakout {
+            /* Beat 1: right + slightly up (mirrors AI beat 1) */
+            0%   { transform: translate(0px, 0px);     opacity: 1; }
+            17%  { transform: translate(213px, -54px);  opacity: 1; }
+            25%  { transform: translate(213px, -54px);  opacity: 0; }
+            26%  { transform: translate(0px, 0px);     opacity: 0; }
+            /* Beat 2: left + down (mirrors AI beat 2) */
+            33%  { transform: translate(0px, 0px);     opacity: 1; }
+            50%  { transform: translate(-172px, 137px); opacity: 1; }
+            58%  { transform: translate(-172px, 137px); opacity: 0; }
+            59%  { transform: translate(0px, 0px);     opacity: 0; }
+            /* Beat 3: right + up (mirrors AI beat 3) */
+            66%  { transform: translate(0px, 0px);     opacity: 1; }
+            83%  { transform: translate(70px, -210px);  opacity: 1; }
+            91%  { transform: translate(70px, -210px);  opacity: 0; }
+            92%  { transform: translate(0px, 0px);     opacity: 0; }
+            100% { transform: translate(0px, 0px);     opacity: 1; }
+        }
+
+        /* VIZ 4: STRUCTURAL FORCES (FUNNEL) */
+        .forces-viz { height: 450px; }
+        .funnel-svg { width: 100%; height: 100%; }
+        .funnel-outline { fill: #EBE8E1; stroke: #CBD5E0; stroke-width: 1; }
+        .funnel-wall { fill: none; stroke: #A0AEC0; stroke-width: 2; stroke-dasharray: 5; }
+        .force-label { font-size: 11px; font-weight: 800; fill: #718096; text-transform: uppercase; letter-spacing: 0.1em; }
+        .force-label-accent { fill: #4A5568; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        .f-particle { 
+            animation: trueFunnel 5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+
+        @keyframes trueFunnel {
+            0% { transform: translate(0px, var(--start-y)); opacity: 0; }
+            10% { opacity: 1; }
+            45% { transform: translate(320px, 200px); fill: inherit; }
+            60% { transform: translate(480px, 200px); fill: #1A1A1A; }
+            90% { opacity: 1; }
+            100% { transform: translate(850px, 200px); opacity: 0; fill: #1A1A1A; }
+        }
+
+        .viz-label {
+            width: 100%; text-align: center; padding: 15px; background: #EBE8E1;
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+            font-weight: 700; color: #718096; border-top: 1px solid #E5E1DA;
+        }
+
+        /* Video thumbnail cards */
+        .video-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+            margin: 60px 0;
+        }
+        .video-item { display: flex; flex-direction: column; gap: 12px; }
+        .video-thumb {
+            position: relative; display: block; width: 100%; padding-top: 56.25%;
+            border-radius: 4px; overflow: hidden; text-decoration: none;
+            background: #000;
+        }
+        .video-thumb img {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; transition: opacity 0.2s ease;
+        }
+        .video-thumb:hover img { opacity: 0.75; }
+        .video-thumb-play {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 48px; height: 48px; background: rgba(0,0,0,0.7);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s ease;
+        }
+        .video-thumb:hover .video-thumb-play { background: #000; }
+        .video-thumb-play::after {
+            content: ""; display: block;
+            width: 0; height: 0;
+            border-style: solid;
+            border-width: 8px 0 8px 16px;
+            border-color: transparent transparent transparent #fff;
+            margin-left: 3px;
+        }
+        .video-caption {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #718096; line-height: 1.5;
+        }
+        @media (max-width: 850px) {
+            .video-grid { grid-template-columns: 1fr; }
+        }
+
+        footer { padding: 100px 0; border-top: 1px solid #D1CDC7; font-size: 1rem; color: #718096; margin-bottom: 40px; }
+
+        /* Citations & Endnotes */
+        sup a { color: var(--accent-color); text-decoration: none; font-size: 0.75em; font-weight: 700; vertical-align: super; line-height: 0; }
+        sup a:hover { text-decoration: underline; }
+        .endnotes { padding-top: 80px; border-top: 1px solid #D1CDC7; margin-top: 20px; }
+        .endnotes h2 { font-size: 1.8rem; margin: 0 0 40px 0 !important; font-weight: 800; letter-spacing: -0.03em; }
+        .endnotes ol { padding-left: 24px; }
+        .endnotes li { font-size: 0.95rem; color: #718096; margin-bottom: 16px; line-height: 1.65; }
+        .endnotes li a { color: #718096; word-break: break-all; }
+        .endnotes li em { font-style: italic; }
+        .backref { font-size: 0.8em; margin-left: 6px; text-decoration: none; color: #A0AEC0; word-break: normal; }
+        .backref:hover { color: var(--text-color); }
+
+        @media (max-width: 850px) {
+            h1 { font-size: 4rem; }
+            :root { --content-width: 90%; }
+            .viz-header, .limits-header { flex-direction: column; }
+            .viz-container, .limits-viz-container, .forces-viz { height: auto; }
+            .comp-side:first-child { border-right: none; border-bottom: 1px dashed #A0AEC0; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Creativity and the Limits of Artificial Intelligence</h1>
+            <div class="meta">By Justin Riggi • May 2026</div>
+        </header>
+
+        <article>
+            <p>In the digital universe, computers have learned to listen to and make sounds from the physical one. Noises, which were once distinct products of living beings, can now be reproduced by inanimate machines. Robots speak with human voices; virtual artists create lively music. But not quite.<sup id="ref1"><a href="#fn1">1</a></sup> In recent years, artificial intelligence has begun to blur one of the most deeply human boundaries: the creation and interpretation of sound.</p>
+            <p>Despite advances, something is unmistakably absent. AI-generated music often feels hollow because while polished, it lacks originality, emotional depth, and cultural resonance.<sup id="ref2"><a href="#fn2">2</a></sup> This gap is not merely aesthetic but reveals a fundamental distinction between how humans and machines experience, process, and create sound. As Jean-Fran&#231;ois Augoyard writes in <em>Sonic Experience</em>, &#8220;man lives in an uneasy ocean of air continually agitated by the disturbances of sound waves,&#8221; emphasizing that sound is an immersive, ever-present condition of human life.<sup id="ref3"><a href="#fn3">3</a></sup> Contemporary AI audio systems fail to produce truly meaningful or original sound because they rely on segmented, statistical representations rather than holistic perception, they cannot replicate the embodied neurological processes through which humans interpret sound, they are constrained by training data that reinforces past patterns instead of enabling genuine creativity, they lack access to the cultural contexts through which sound acquires meaning, and they operate within economic structures that incentivize standardization over originality. Together, these limitations reveal both the technical boundaries of artificial intelligence and the distinctly human foundations of artistic expression. At stake is not only the future of music and audio production, but also broader questions about creativity, cultural meaning, and human connection in an increasingly automated world.</p>
+
+            <h2>Technical Representation of Sound</h2>
+            <p>Despite the recent monumental technological developments in AI, the sounds produced by artificial systems sound, well, artificial. Automated voices generated by software, like ElevenLabs' audio AI platform, still sound unnerving, as if someone were trying to put on an accent of another's voice and AI-generated songs, created by platforms such as Suno, lack originality, resembling the stereotypical, imagined version of a song in any given genre. While undeniably technically impressive, these systems fail to produce art that adequately captures the depth and nuance of that by humans. This persistent gap is not a matter of imperfect engineering, but rather reflects a deeper limitation in how artificial systems represent and process sound. As Joseph Auner explains, &#8220;it is as if&#8230; a musical sound is forcibly extracted from the sacred sphere of art and turned into an object to be manipulated and probed&#8230;,&#8221; reshaping both the nature of sound and human listening.<sup id="ref4"><a href="#fn4">4</a></sup></p>
+            
+            <p>The technical reasons for this phenomenon are vast and varied, but stem from the fundamental reality that computers aren’t humans and the intricate processes controlling our internal sound systems has yet to be replicated by computer scientists. Developers at top technology labs often try to create programs to simulate the outputs of humans, but have not managed to build the fundamental architectures inside us.<sup id="ref5"><a href="#fn5">5</a></sup> While LLMs powering chatbots like ChatGPT, Claude, and Gemini output text that can feel eerily human, they do not do so in the same way as human brains, processing data in tokens, not words, and through statistics, not logic. A similar reduction occurs in audio systems, where continuous sound is transformed into simplified mathematical representation that can be processed computationally.<sup id="ref6"><a href="#fn6">6</a></sup></p>
+            
+            <p>Text-based AI can somewhat convincingly mimic human language, however, the intricate complexity of audio presents a greater challenge. Unlike the discrete symbols that comprise written language, making it linear in nature, sound is the result of the combination of many continuous, layered waves, where each wave itself is comprised of many pieces of information, making it multi-dimensional. As Arnold Schoenberg suggests, sound &#8220;should not be understood as an isolated parameter of sound, but as an integral manifestation of the generative &#8216;Idea.&#8217;&#8221;<sup id="ref7"><a href="#fn7">7</a></sup> In computational systems, this continuous signal must be discretized into representations that allow machines to analyze it, but that comes at the cost of fragmenting it rather than viewing it as a unified whole.</p>
+
+            <div class="viz-container">
+                <div class="viz-header">
+                    <div class="comp-side">
+                        <div class="label-sm">1D Text</div>
+                        <div class="text-conveyor">
+                            <div class="token-set"><div class="token"></div><div class="token"></div><div class="token"></div><div class="token"></div></div>
+                            <div class="token-set"><div class="token"></div><div class="token"></div><div class="token"></div><div class="token"></div></div>
+                        </div>
+                    </div>
+                    <div class="comp-side">
+                        <div class="label-sm">Multidimensional Audio</div>
+                        <div class="audio-stack">
+                            <div class="wave-layer"><svg class="wave-svg animate-wave-fast" viewBox="0 0 400 30" preserveAspectRatio="none"><path class="wave-path" d="M0,15 Q10,5 20,15 T40,15 T60,15 T80,15 T100,15 T120,15 T140,15 T160,15 T180,15 T200,15 T220,15 T240,15 T260,15 T280,15 T300,15 T320,15 T340,15 T360,15 T380,15 T400,15 T410,5 420,15 T440,15 T460,15 T480,15 T500,15 T520,15 T540,15 T560,15 T580,15 T600,15 T620,15 T640,15 T660,15 T680,15 T700,15 T720,15 T740,15 T760,15 T780,15 T800,15" /></svg></div>
+                            <div class="wave-layer"><svg class="wave-svg animate-wave-mid" viewBox="0 0 400 30" preserveAspectRatio="none"><path class="wave-path" d="M0,15 Q25,0 50,15 T100,15 T150,15 T200,15 T250,15 T300,15 T350,15 T400,15 T450,15 T500,15 T550,15 T600,15 T650,15 T700,15 T750,15 T800,15" opacity="0.5" /></svg></div>
+                            <div class="wave-layer"><svg class="wave-svg animate-wave-slow" viewBox="0 0 400 30" preserveAspectRatio="none"><path class="wave-path" d="M0,15 Q50,-5 100,15 T200,15 T300,15 T400,15 T500,15 T600,15 T700,15 T800,15" opacity="0.2" /></svg></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="viz-label">Text exists in a linear domain as compared to the mutlidimensional space occupied by audio.</div>
+            </div>
+
+            <h2>Human Cognition and Embodied Perception</h2>
+            <p>Our brains’ temporal lobes, particularly regions within the auditory cortex, process continuous audio by filtering what we hear through neural channels, based on our learned understanding of what makes different types of audio distinct. Rather than passively receiving sound, the brain actively organizes and interprets incoming auditory signal in real time. We actively interpret sounds in multiple ways, analyzing both its literal, acoustic properties and its emotional, social meanings. In this dual processing system, low-level sensory input, such as pitch, rhythm, and timbre, is integrated with higher-level cognitive interpretation, including memory, emotion, and contextual association. This processing pipeline is not just technical, but also cultural, as the listener is able to connect a sound to one’s broader experiences, identity, and expectations.</p>
+
+            <p>Crucially, human auditory perception is shaped by predictive processing, in which the brain continuously generates expectations about incoming sound and updates those expectations based on what is actually heard. Top-down signals from memory and prior knowledge interact with bottom-up sensory input, allowing humans to anticipate rhythm, recognize familiar voices, and infer meaning even from incomplete or ambiguous audio. This predictive integrative system enables humans to perceive sound as a coherent and meaningful whole rather than as a collection of discrete elements. On the other hand, computer systems are unable to look at an audio file in its entirety, instead needing to segment it into smaller components for processing to extract specific technical features.<sup id="ref8"><a href="#fn8">8</a></sup> Current AI audio models rely on feature extraction in the time domain, measuring variables such as frequency, MFCCs, spectrograms, and chroma features to represent sound mathematically. This captures the statistical properties of the signal, but does not encode meaning, intention, or contextual significance. Although this approach allows machines to identify and recreate patterns within these segments, it inherently inhibits their ability to interpret sound in an integrated manner. It results in not interpretation, but extraction, explaining why AI-generated audio feels coherent but lacks depth.</p>
+
+            <div class="segment-viz">
+                <div class="segment-stage">
+                    <div class="status-indicator"></div>
+                    <svg width="80%" height="200" viewBox="0 0 800 200" preserveAspectRatio="none">
+                        <path class="wave-human" d="M0,100 C100,20 200,180 300,100 C400,20 500,180 600,100 C700,20 800,180 900,100" />
+                        <path class="wave-ai" d="M0,100 L60,100 L60,40 L120,40 L120,100 L180,100 L180,160 L240,160 L240,100 L300,100 L300,40 L360,40 L360,100 L420,100 L420,160 L480,160 L480,100 L540,100 L540,40 L600,40 L600,100 L660,100 L660,160 L720,160 L720,100 L800,100" />
+                    </svg>
+                    <div class="chopper-grid">
+                        <div class="chop-bar" style="animation-delay: 0.2s"></div>
+                        <div class="chop-bar" style="animation-delay: 0.4s"></div>
+                        <div class="chop-bar" style="animation-delay: 0.6s"></div>
+                        <div class="chop-bar" style="animation-delay: 0.8s"></div>
+                        <div class="chop-bar" style="animation-delay: 1.0s"></div>
+                        <div class="chop-bar" style="animation-delay: 1.2s"></div>
+                        <div class="chop-bar" style="animation-delay: 1.4s"></div>
+                        <div class="chop-bar" style="animation-delay: 1.6s"></div>
+                    </div>
+                </div>
+                <div class="viz-label">Humans listen to audio continuously, whereas AI pro  cesses it in fragmented segments.</div>
+            </div>
+
+            <h2>Limits of Creativity</h2>
+            <p>Trained neural networks—even those that are state-of-the-art—do not have the capability to understand sound adaptively or generalize it into truly novel contexts. Rather than generating ideas from first principles, these systems operate through statistical inference, identifying and recombining patterns present in their training data.<sup id="ref9"><a href="#fn9">9</a></sup> By definition, the statistical inference nature of AI models fundamentally constrains their creative capacity, as they are unable to understand or create tracks that stray too far away from their training data.<sup id="ref10"><a href="#fn10">10</a></sup> In this sense, AI operates through interpolation rather than extrapolation, such that they produce variations within known patterns instead of creating genuinely new forms that extend beyond prior examples. The result is that these models are backward-looking, optimized to reproduce what it has seen, not to generate what has never existed. In a post-modern sense, AI systems are permanently anchored to the archive, unable to imagine a future that departs meaningfully from the past.</p>
+            
+            <p>This is why generative AI tends to produce songs that, while technically impressive, lack the surprise of human-created music.<sup id="ref11"><a href="#fn11">11</a></sup> Philosopher Margaret Boden’s framework for creativity helps clarify this limitation, distinguishing between combinational creativity that relies on rearranging existing elements, exploratory creativity that works within established stylistic rules, and transformational creativity that fundamentally alters those rules to create something new.<sup id="ref12"><a href="#fn12">12</a></sup> Current AI systems are confined to the first two categories, combining and exploring, but not transforming. Furthermore, the most common harmonic and percussive elements are promoted in tracks which serve as training data for future models, creating a cyclical production process which promotes conformity.</p>
+
+            <div class="limits-viz-container">
+                <div class="limits-header">
+                    <div class="comp-side">
+                        <div class="label-sm">AI: Tethered to the Mean</div>
+                        <svg width="100%" height="240" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet">
+                            <!-- Constraint wall: dashed, clearly visible, flares on impact -->
+                            <circle class="ai-perimeter" cx="400" cy="200" r="130" />
+                            <!-- Subtle inner zone showing "safe" center region -->
+                            <circle cx="400" cy="200" r="55" fill="none" stroke="#000" stroke-width="0.5" opacity="0.1" />
+                            <!-- Center anchor -->
+                            <circle class="center-dot" cx="400" cy="200" r="5" />
+                            <!-- AI dot: slams against wall, snaps back -->
+                            <circle class="ai-dot" cx="400" cy="200" r="11" />
+                        </svg>
+                    </div>
+
+                    <div class="comp-side">
+                        <div class="label-sm">Human: Breaking Boundaries</div>
+                        <svg width="100%" height="240" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet">
+                            <circle class="human-perimeter" cx="400" cy="200" r="130" />
+                            <circle class="center-dot" cx="400" cy="200" r="5" />
+                            <circle class="human-dot" cx="400" cy="200" r="11" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="viz-label">AI is built to return the mean whereas humans create by breaking established bondaries.</div>
+            </div>
+
+            <h2>Cultural Meaning of Sound</h2>
+            <p>For AI systems, the consequences of this programmed reality are severe. Due to the technical focus of current programs&#8212;where sonic harmony is the primary end goal&#8212;they are unable to understand sounds within a greater cultural context, a task human practitioners perform intuitively.<sup id="ref13"><a href="#fn13">13</a></sup> Sound is not merely a physical phenomenon composed of frequencies and waveforms but a cultural artifact embedded in systems of meaning, identity, and social practice. As a result, current AI systems are unable to act as what Jonathan Sterne describes in <em>The Sound Studies Reader</em> as Sound Students, which he describes as &#8220;&#8230; historians, philosophers, musicologists, anthropologists, literary critics, art historians, geographers, or residents of one of many other postwar &#8216;studies&#8217; fields.&#8221;<sup id="ref14"><a href="#fn14">14</a></sup> Such listeners recognize that sounds do not exist in isolation, but instead as an interconnected aspect of society more broadly. The meaning of a sound is not contained within the sound itself, but emerges from the context in which is produced, heard, and interpreted. An AI system processing a recording can extract its acoustic features, but does not have access to the meaning of any particular sound.</p>
+
+            <div class="video-grid">
+                <div class="video-item">
+                    <a class="video-thumb" href="https://www.youtube.com/watch?v=7akuOFp-ET8" target="_blank" rel="noopener noreferrer" aria-label="Watch Joan Baez — We Shall Overcome on YouTube">
+                        <img src="https://i.ytimg.com/vi/7akuOFp-ET8/hqdefault.jpg" alt="Joan Baez performs We Shall Overcome at the March on Washington" loading="lazy">
+                        <span class="video-thumb-play"></span>
+                    </a>
+                    <p class="video-caption">Joan Baez&#8217;s performance of &#8220;We Shall Overcome&#8221; at the 1963 March on Washington demonstrates how a song can carry meaning through its historical context. Without understanding the moment, a listener would not grasp the significance of the song as a protest anthem.</p>
+                </div>
+                <div class="video-item">
+                    <a class="video-thumb" href="https://www.youtube.com/watch?v=Vg1mpD1BICI" target="_blank" rel="noopener noreferrer" aria-label="Watch NYC Nighttime Soundscape on YouTube">
+                        <img src="https://i.ytimg.com/vi/Vg1mpD1BICI/hqdefault.jpg" alt="Open Window New York City Soundscape at Night" loading="lazy">
+                        <span class="video-thumb-play"></span>
+                    </a>
+                    <p class="video-caption">A nighttime Manhattan soundscape illustrates how urban ambient sound is embedded with meaning. A listener must understand the culture of New York City to appreciate how these sounds collectively carry social, economic, and political connotations that are not evident on the surface.</p>
+                </div>
+                <div class="video-item">
+                    <a class="video-thumb" href="https://www.youtube.com/watch?v=PGBoVotHqIE" target="_blank" rel="noopener noreferrer" aria-label="Watch Artemis II Launch on YouTube">
+                        <img src="https://i.ytimg.com/vi/PGBoVotHqIE/hqdefault.jpg" alt="Artemis II countdown and launch: Full liftoff video" loading="lazy">
+                        <span class="video-thumb-play"></span>
+                    </a>
+                    <p class="video-caption">The roar of the Artemis II rocket launch carries cultural weight&#8212;national pride and scientific ambition&#8212;that its raw acoustic properties alone cannot convey. To appreciate its signicance, a lister must know the circumstances of this mission and the previous Apollo missions before it.</p>
+                </div>
+            </div>
+
+            
+
+            <h2>Structural Forces</h2>
+            <p>The data developers choose to include in a model&#8217;s training set builds in inherent bias that can systematically crowd out certain genres and cultures, effectively eliminating them within AI-generated outputs. The vast catalog of Western music available online, in comparison to the relatively inaccessible and under-digitized collections of non-Western traditions, means that AI models are far better equipped to reproduce Western musical forms than music from underrepresented cultures.<sup id="ref15"><a href="#fn15">15</a></sup> This imbalance reveals a broader pattern of algorithmic bias, in which available data shapes not only what AI can produce but what it recognizes as normative and valuable.<sup id="ref16"><a href="#fn16">16</a></sup> The probabilistic operation of these models further compounds the issue as they are unable to effectively segment requests through separate neural network pipelines, meaning that outputted songs are the result of all training data, not just data relevant to a certain genre. As a result, AI-generated music for underrepresented cultures are often contaminated with Western elements, creating an unintentional but nonetheless present digital colonization effect.</p>
+
+            <p>Proponents of generative AI audio systems often argue that the meaning and value of these tools’ output depend on how humans interact with them, but this argument obscures several important facts. First, the choices made by developers, including what datasets to train on, what loss functions to optimize, and what sonic qualities to prioritize, embed aesthetic values and cultural assumptions into the technology itself. Second, the widespread adoption of AI audio tools has structural consequences for the creative economy as the economic pressure to replace human labor with automated systems does not require that the AI output be comparable to human output, but only good enough for the use case. There are strong incentives for industries such as film, advertising and digital media to prioritize efficiency over originality.<sup id="ref17"><a href="#fn17">17</a></sup> This shift displaces human composers, producers, and session musicians, particularly in lower-visibility or commercial contexts where cost considerations dominate. At the same time, these dynamics intersect with broader trends in platform capitalism and the streaming economy, where algorithmically optimized content already favors familiarity, repetition, and high-volume production over artistic risk-taking.</p>
+
+            <p>The widespread proliferation of AI in music threatens the foundation of human connection that give music its meaning. Music has served as a powerful tool to bring people together, both within and across cultures, communicating feelings that are difficult to convey in other mediums. Music&#8217;s power is dependent on trust&#8212;the trust that one understands the importance of a piece&#8212;between listeners and artists. In a world where AI generated music becomes increasingly prevalent, this trust is destabilized as listeners may no longer be able to determine whether a piece of music reflects lived experience or is the product of algorithmic synthesis. If AI can replace human artists in nearly all stages of the creation process, from lyric development to instrumental production, then the authenticity that frequently attracts listeners to music is undermined. While some argue that meaning can still emerge from human interaction with these systems, this view overlooks the importance of perceived intention, experience, and embodiment that shapes emotional connection. Work is ongoing to assess whether AI models possess any form of consciousness. Current estimates from Anthropic suggest that such systems are unlikely, estimated at 20%, to possess genuine awareness, reinforcing the idea that their output is mimetic rather than expressive.</p>
+            <div class="forces-viz">
+                <svg class="funnel-svg" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">
+                    <path class="funnel-outline" d="M0,0 L320,170 L480,170 L800,170 L800,230 L480,230 L320,230 L0,400 Z" />
+                    
+                    <line class="funnel-wall" x1="0" y1="0" x2="320" y2="170" />
+                    <line class="funnel-wall" x1="0" y1="400" x2="320" y2="230" />
+                    
+                    <text class="force-label" x="120" y="207" text-anchor="middle">Diverse Cultural Input</text>
+
+                    <text class="force-label" x="550" y="160">Algorithmic Norm</text>
+
+                    <circle class="f-particle" r="6" fill="#FF5F5F" cx="0" cy="0" style="--start-y: 50px; animation-delay: 0s;" />
+                    <circle class="f-particle" r="5" fill="#5F9FFF" cx="0" cy="0" style="--start-y: 100px; animation-delay: 1s;" />
+                    <circle class="f-particle" r="7" fill="#5FFF9F" cx="0" cy="0" style="--start-y: 200px; animation-delay: 2s;" />
+                    <circle class="f-particle" r="4" fill="#FFD75F" cx="0" cy="0" style="--start-y: 300px; animation-delay: 3s;" />
+                    <circle class="f-particle" r="6" fill="#C75FFF" cx="0" cy="0" style="--start-y: 350px; animation-delay: 4s;" />
+                    <circle class="f-particle" r="5" fill="#FF5FE9" cx="0" cy="0" style="--start-y: 80px; animation-delay: 0.5s;" />
+                    <circle class="f-particle" r="6" fill="#5FFFD7" cx="0" cy="0" style="--start-y: 320px; animation-delay: 2.5s;" />
+                </svg>
+                <div class="viz-label">Diverse cultural inputs are are compressed by dataset bias into a standardized output.</div>
+            </div>
+
+            <h2>Conclusion</h2>
+            <p>As AI continues to play a more prevalent role in our society, it is crucial that we define its role before AI does so for itself. Creativity and artistry are tasks that we should reserve for humans, as their purpose is to express specific aspects of the human condition.<sup id="ref18"><a href="#fn18">18</a></sup> While AI may be able to mimic or replicate art, its outputs lack cultural awareness, rendering a society that is less interconnected, and risking a cultural landscape that is more abundant but less meaningful.</p>
+
+            <p>Technologists should therefore halt building tools that take humans out of the equation, instead choosing to create tools that support and empower the people who make art special.<sup id="ref19"><a href="#fn19">19</a></sup> Although imagining such tools is a difficult task, as striking the appropriate balance between assistant and action is an art itself, it is essential to do so moving forward. Rather than pursuing automation for its own sake, developers must confront the broader cultural, economic, and ethical consequences of the systems they build, including their effects on artistic labor, cultural representation, and authenticity. Furthermore, pushing a technology to and beyond its limits can sometimes lead to the displacement of the very human capacities it seeks to emulate, meaning that restraint and intentional human-centric design are necessary to ensure technological progress aligns with human values. The question we all must answer is how to create technology that serves humans—a question that no algorithm can answer for us.</p>
+
+            <section class="endnotes">
+                <h2>Notes</h2>
+                <ol>
+                    <li id="fn1">Alessandra Sciutti, Giulio Sandini, and Pietro Morasso, &#8220;Artificial Cognition vs. Artificial Intelligence for Next-Generation Autonomous Robotic Agents,&#8221; <em>Frontiers in Computational Neuroscience</em> 18 (March 22, 2024), <a href="https://doi.org/10.3389/fncom.2024.1349408">https://doi.org/10.3389/fncom.2024.1349408</a>.<a class="backref" href="#ref1">&#8617;</a></li>
+                    <li id="fn2">David Stammer, Hannah Strauss, and Peter Knees, &#8220;Perception of AI-Generated Music &#8211; the Role of Composer Identity, Personality Traits, Music Preferences, and Perceived Humanness,&#8221; <em>ArXiv.org</em>, 2025, <a href="https://arxiv.org/abs/2512.02785">https://arxiv.org/abs/2512.02785</a>.<a class="backref" href="#ref2">&#8617;</a></li>
+                    <li id="fn3">Andra Mccartney et al., <em>Sonic Experience: A Guide to Everyday Sounds</em> (Quebec: Mcgill-Queen&#8217;s University Press, 2011).<a class="backref" href="#ref3">&#8617;</a></li>
+                    <li id="fn4">Joseph Auner, &#8220;Weighing, Measuring, Embalming Tonality: How We Became Phonometrographers,&#8221; n.d.<a class="backref" href="#ref4">&#8617;</a></li>
+                    <li id="fn5">Hubert L. Dreyfus, &#8220;What Computers Can&#8217;t Do: The Limits of Artificial Intelligence,&#8221; <em>Phil Papers</em>, 1972, <a href="https://philpapers.org/rec/DREWCC">https://philpapers.org/rec/DREWCC</a>.<a class="backref" href="#ref5">&#8617;</a></li>
+                    <li id="fn6">Rohan Mitra and Imran Zualkernan, &#8220;Music Generation Using Deep Learning and Generative AI: A Systematic Review,&#8221; <em>IEEE Access</em>, January 1, 2025, 1&#8211;1, <a href="https://doi.org/10.1109/access.2025.3531798">https://doi.org/10.1109/access.2025.3531798</a>.<a class="backref" href="#ref6">&#8617;</a></li>
+                    <li id="fn7">Joseph Auner, &#8220;Schoenberg as Sound Student: Pierrot&#8217;s Klang,&#8221; <em>The Oxford Handbook of Timbre</em>, April 2019, <a href="https://doi.org/10.1093/oxfordhb/9780190637224.013.6">https://doi.org/10.1093/oxfordhb/9780190637224.013.6</a>.<a class="backref" href="#ref7">&#8617;</a></li>
+                    <li id="fn8">Jade Copet et al., &#8220;Simple and Controllable Music Generation,&#8221; <em>ArXiv.org</em>, June 8, 2023, <a href="https://doi.org/10.48550/arXiv.2306.05284">https://doi.org/10.48550/arXiv.2306.05284</a>.<a class="backref" href="#ref8">&#8617;</a></li>
+                    <li id="fn9">Edgar Dobriban, &#8220;Statistical Methods in Generative AI,&#8221; <em>Arxiv.org</em>, 2025, <a href="https://arxiv.org/html/2509.07054v1">https://arxiv.org/html/2509.07054v1</a>.<a class="backref" href="#ref9">&#8617;</a></li>
+                    <li id="fn10">Stacey Federoff, &#8220;As AI-Generated Music Advances, Humans Still Lead in Creativity, CMU Research Finds,&#8221; <em>Carnegie Mellon University</em>, January 30, 2026, <a href="https://www.cmu.edu/news/stories/archives/2026/january/as-ai-generated-music-advances-humans-still-lead-in-creativity-cmu-research-finds">https://www.cmu.edu/news/stories/archives/2026/january/as-ai-generated-music-advances-humans-still-lead-in-creativity-cmu-research-finds</a>.<a class="backref" href="#ref10">&#8617;</a></li>
+                    <li id="fn11">Ilia Shumailov et al., &#8220;The Curse of Recursion: Training on Generated Data Makes Models Forget,&#8221; <em>ArXiv</em>, May 31, 2023, <a href="https://doi.org/10.48550/arXiv.2305.17493">https://doi.org/10.48550/arXiv.2305.17493</a>.<a class="backref" href="#ref11">&#8617;</a></li>
+                    <li id="fn12">Margaret Boden, &#8220;Dimensions of Creativity,&#8221; <em>MIT Press Direct</em>, June 7, 1994, <a href="https://doi.org/10.7551/mitpress/2437.001.0001">https://doi.org/10.7551/mitpress/2437.001.0001</a>.<a class="backref" href="#ref12">&#8617;</a></li>
+                    <li id="fn13">Kehinde Aruwajoye, &#8220;Floating Signifiers: AI, Semiotics, and the Crisis of Meaning in Music,&#8221; <em>Dartmouth Digital Commons</em>, 2025, <a href="https://digitalcommons.dartmouth.edu/masters_theses/227/">https://digitalcommons.dartmouth.edu/masters_theses/227/</a>.<a class="backref" href="#ref13">&#8617;</a></li>
+                    <li id="fn14">Jonathan Sterne, <em>The Sound Studies Reader</em> (New York: Routledge, 2012).<a class="backref" href="#ref14">&#8617;</a></li>
+                    <li id="fn15">Linus Wechuli Odeke and Amon Kipyegon Kirui, &#8220;Reclaiming the Sonic Archive: AI, Data Sovereignty, and the Future of Mijikenda Music,&#8221; <em>Journal of Visual and Performing Arts</em> 3, no. 1 (December 30, 2025): 53&#8211;62, <a href="https://doi.org/10.58721/jvpa.v3i1.1516">https://doi.org/10.58721/jvpa.v3i1.1516</a>.<a class="backref" href="#ref15">&#8617;</a></li>
+                    <li id="fn16">Ant&#243;nio Correia, &#8220;Downsides, Pitfalls, and Socio-Cultural Shortcomings of Human-AI Music Co-Creation,&#8221; 2025, <a href="https://ceur-ws.org/Vol-4074/short10-10.pdf">https://ceur-ws.org/Vol-4074/short10-10.pdf</a>.<a class="backref" href="#ref16">&#8617;</a></li>
+                    <li id="fn17">&#8220;Artificial Intelligence in Media, Entertainment and Sport&#8221; (World Economic Forum, January 2025), <a href="https://reports.weforum.org/docs/WEF_Artificial_Intelligence_in_Media_Entertainment_and_Sport_2025.pdf">https://reports.weforum.org/docs/WEF_Artificial_Intelligence_in_Media_Entertainment_and_Sport_2025.pdf</a>.<a class="backref" href="#ref17">&#8617;</a></li>
+                    <li id="fn18">Yibo Meng et al., &#8220;Tracing Generative AI in Digital Art: A Longitudinal Study of Chinese Painters&#8217; Attitudes, Practices, and Identity Negotiation,&#8221; <em>Arxiv.org</em>, 2026, <a href="https://arxiv.org/html/2511.03117v2">https://arxiv.org/html/2511.03117v2</a>.<a class="backref" href="#ref18">&#8617;</a></li>
+                    <li id="fn19">Eric Browne, &#8220;The Shape of Surprise: Structured Uncertainty and Co-Creativity in AI Music Tools,&#8221; <em>ArXiv.org</em>, 2025, <a href="https://doi.org/10.5281/zenodo.16946685">https://doi.org/10.5281/zenodo.16946685</a>.<a class="backref" href="#ref19">&#8617;</a></li>
+                </ol>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Justin Riggi. All rights reserved.</p>
+            </footer>
+        </article>
+    </div>
+
+</body>
+</html>
