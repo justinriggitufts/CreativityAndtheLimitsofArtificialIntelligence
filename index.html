@@ -190,8 +190,6 @@
         }
 
         footer { padding: 100px 0; border-top: 1px solid #D1CDC7; font-size: 1rem; color: #718096; margin-bottom: 40px; }
-
-        /* Citations & Endnotes */
         sup a { color: var(--accent-color); text-decoration: none; font-size: 0.75em; font-weight: 700; vertical-align: super; line-height: 0; }
         sup a:hover { text-decoration: underline; }
         .endnotes { padding-top: 80px; border-top: 1px solid #D1CDC7; margin-top: 20px; }
@@ -204,11 +202,25 @@
         .backref:hover { color: var(--text-color); }
 
         @media (max-width: 850px) {
-            h1 { font-size: 4rem; }
-            :root { --content-width: 90%; }
+            :root { --content-width: 100%; }
+            body { padding: 0 18px; }
+            header { margin-top: 60px; margin-bottom: 50px; }
+            h1 { font-size: 3.2rem; line-height: 0.85; }
+            h2 { font-size: 1.9rem; margin: 50px 0 20px 0; }
+            p { font-size: 1.1rem; margin-bottom: 24px; }
+            article { padding-bottom: 80px; }
+            footer { padding: 50px 0; }
+            .meta { font-size: 0.9rem; }
+            .comp-side { padding: 24px; min-height: 120px; }
             .viz-header, .limits-header { flex-direction: column; }
-            .viz-container, .limits-viz-container, .forces-viz { height: auto; }
+            .viz-container { height: auto; min-height: 200px; }
+            .limits-viz-container { height: auto; }
+            .segment-viz { height: 260px; }
+            .forces-viz { height: 220px; }
             .comp-side:first-child { border-right: none; border-bottom: 1px dashed #A0AEC0; }
+            .endnotes { padding-top: 50px; }
+            .endnotes h2 { font-size: 1.5rem; margin-bottom: 28px !important; }
+            .video-grid { grid-template-columns: 1fr; }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;700;800;900&display=swap" rel="stylesheet">
